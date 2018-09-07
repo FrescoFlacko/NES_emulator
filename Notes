@@ -1,0 +1,2 @@
+The processor is Little Endian. for example the address $1234 would be stored in memory as $34 at
+memory location x and $12 at memory location (x + 1). 
