@@ -1,10 +1,9 @@
 #include "cpu.h"
 
-uint8_t* memory;
-
 int initialize_cpu()
 {
   memory = calloc(65535, 8);
+  sp = 0x0100;
   return 0;
 }
 
@@ -27,4 +26,15 @@ void write(uint16_t address, uint8_t data)
 void print_address(uint16_t address)
 {
   printf("%#06x\n", address);
+}
+
+void push_stack8(uint8_t value)
+{
+  write(sp++, value);
+}
+
+void push_stack16(uint16_t value)
+{
+  write(sp++, value & 0xFF);
+  write(sp++, value >> 8);
 }
