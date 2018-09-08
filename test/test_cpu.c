@@ -8,6 +8,8 @@ int main()
   test_stack();
   */
 
+  test_bitman();
+
   return 0;
 }
 
@@ -66,6 +68,29 @@ void test_stack()
   assert(sp == 0x0100);
   assert(value8 == 0x10);
 
-  /* Tear Down */
+  /* Tear down */
+  deinitialize_cpu();
+}
+
+void test_bitman()
+{
+  /* Set up */
+  initialize_cpu();
+  uint8_t value8;
+  uint16_t value16;
+  processor_status = 0x01;
+
+  /* Test */
+
+  /* Get most significant bit */
+  value8 = highbit(0xF000);
+  assert(value8 == 0x01);
+
+  /* Get bit */
+  value8 = getbit(c);
+  print_address(value8); 
+  assert(value8 == 0x01);
+
+  /* Tear down */
   deinitialize_cpu();
 }

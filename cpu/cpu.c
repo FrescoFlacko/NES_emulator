@@ -52,3 +52,21 @@ uint16_t pop_stack16()
   value += READ(--sp);
   return value;
 }
+
+uint8_t highbit(uint16_t value)
+{
+  uint8_t ret = value >> 15;
+  return ret;
+}
+
+uint8_t getbit(enum program_flag flag)
+{
+  uint8_t ret;
+
+  if (flag == c)
+  {
+    ret = processor_status & 0x01;
+  }
+
+  return ret;
+}

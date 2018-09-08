@@ -6,5 +6,6 @@
 
 void test_addresses();
 void test_stack();
+void test_bitman();
 
 #endif
