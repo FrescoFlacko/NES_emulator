@@ -2,9 +2,12 @@
 
 int main()
 {
-  test_addresses();
 
-  push_stack8(0x004D);
+  /*
+  test_addresses();
+  */
+
+  test_stack();
 
   return 0;
 }
@@ -36,4 +39,34 @@ void test_addresses()
   deinitialize_cpu();
 }
 
-void test_stack();
+void test_stack()
+{
+  /* Set up */
+  initialize_cpu();
+
+  /* Test */
+
+  /* Push byte to stack */
+  push_stack8(0x10);
+  assert(sp == 0x0101);
+  assert(memory[0x0100] == 0x10);
+
+  /* Push word to stack */
+  push_stack16(0xFFED);
+  assert(sp == 0x0103);
+  assert(READ(0x0101) == 0xED);
+  assert(READ(0x0102) == 0xFF);
+
+  /* Pop word from stack */
+  uint16_t value16 = pop_stack16();
+  assert(sp == 0x0101);
+  assert(value16 == 0xFFED);
+
+  /* Pop byte from stack */
+  uint8_t value8 = pop_stack8();
+  assert(sp == 0x0100);
+  assert(value8 == 0x10);
+
+  /* Tear Down */
+  deinitialize_cpu();
+}

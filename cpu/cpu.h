@@ -22,6 +22,8 @@ int deinitialize_cpu();
 void print_address(uint16_t address);
 void push_stack8(uint8_t value);
 void push_stack16(uint16_t value);
+uint8_t pop_stack8();
+uint16_t pop_stack16();
 
 uint16_t sp;
 uint16_t pc;
