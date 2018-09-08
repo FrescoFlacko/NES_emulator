@@ -14,17 +14,6 @@
 #define IRQ_VECTOR 0xFFFE
 
 uint8_t* memory;
-
-uint8_t read8(uint16_t address);
-void write(uint16_t address, uint8_t data);
-int initialize_cpu();
-int deinitialize_cpu();
-void print_address(uint16_t address);
-void push_stack8(uint8_t value);
-void push_stack16(uint16_t value);
-uint8_t pop_stack8();
-uint16_t pop_stack16();
-
 uint16_t sp;
 uint16_t pc;
 
@@ -32,6 +21,27 @@ uint8_t accumulator;
 uint8_t index_x;
 uint8_t index_y;
 uint8_t processor_status;
+
+enum program_flag {n, v, b, d, i, z, c};
+
+
+/* CPU functions */
+uint8_t read8(uint16_t address);
+void write(uint16_t address, uint8_t data);
+int initialize_cpu();
+int deinitialize_cpu();
+void print_address(uint16_t address);
+
+/* Stack functions */
+void push_stack8(uint8_t value);
+void push_stack16(uint16_t value);
+uint8_t pop_stack8();
+uint16_t pop_stack16();
+
+/* Bit manipulation functions */
+uint8_t highbit(uint16_t value);
+uint8_t getbit(enum program_flag flag);
+void setbit(enum program_flag flag, uint8_t value);
 
 /* Addressing modes */
 #define READ(address) ({ read8(address); })
