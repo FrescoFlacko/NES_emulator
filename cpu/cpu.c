@@ -38,3 +38,17 @@ void push_stack16(uint16_t value)
   write(sp++, value & 0xFF);
   write(sp++, value >> 8);
 }
+
+uint8_t pop_stack8()
+{
+  uint8_t value = READ(--sp);
+  return value;
+}
+
+uint16_t pop_stack16()
+{
+  uint16_t value = READ(--sp);
+  value = value << 8;
+  value += READ(--sp);
+  return value;
+}
