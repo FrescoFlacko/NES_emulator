@@ -15,10 +15,11 @@
 
 uint8_t* memory;
 
-uint8_t* read8(uint16_t address);
+uint8_t read8(uint16_t address);
 void write(uint16_t address, uint8_t data);
 int initialize_cpu();
 int deinitialize_cpu();
+void print_address(uint16_t address);
 
 uint8_t* sp;
 uint16_t pc;
@@ -29,17 +30,17 @@ uint8_t index_y;
 uint8_t processor_status;
 
 /* Addressing modes */
-#define READ(address) ({ read(address); })
+#define READ(address) ({ read8(address); })
 #define ADDR_16(address) ({ \
-  uint16_t addr = (uint16_t) read(address);\
-  addr << 8;\
-  addr += (uint16_t) READ(address + 1);\
+  uint16_t addr = (uint16_t) READ(address + 1);\
+  addr = addr << 8;\
+  addr += (uint16_t) READ(address);\
   addr;\
 })
-#define ZERO_PAGE (address) ({ pc += 2; read(0x0000 + address); })
-#define IND_ZERO_PAGE_X (address) ({ pc += 2; read((address + index_x % 256); })
-#define IND_ZERO_PAGE_Y (address) ({ pc += 2; read((address + index_y % 256); })
-#define ABSOLUTE (address) ({ pc += 3; uint16_t addr = ADDR_16(address + 1); read(addr); })
+#define ZERO_PAGE (address) ({ pc += 2; READ(0x0000 + address); })
+#define IND_ZERO_PAGE_X (address) ({ pc += 2; READ((address + index_x % 256); })
+#define IND_ZERO_PAGE_Y (address) ({ pc += 2; READ((address + index_y % 256); })
+#define ABSOLUTE (address) ({ pc += 3; uint16_t addr = ADDR_16(address + 1); READ(addr); })
 #define IND_ABSOLUTE_X (address) ({ pc += 3; \
   uint16_t addr = ADDR_16(address + 1) + index_x; \
   READ(addr); \

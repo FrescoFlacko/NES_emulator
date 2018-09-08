@@ -14,15 +14,17 @@ int deinitialize_cpu()
   return 0;
 }
 
-uint8_t* read8(uint16_t address)
+uint8_t read8(uint16_t address)
 {
-  printf("Are we even here?\n");
-  printf("%hhu\n", memory[address]);
-
-  return &memory[address];
+  return memory[address];
 }
 
 void write(uint16_t address, uint8_t data)
 {
   memory[address] = data;
+}
+
+void print_address(uint16_t address)
+{
+  printf("%#06x\n", address);
 }
