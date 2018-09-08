@@ -24,7 +24,6 @@ uint8_t processor_status;
 
 enum program_flag {n, v, b, d, i, z, c};
 
-
 /* CPU functions */
 uint8_t read8(uint16_t address);
 void write(uint16_t address, uint8_t data);
