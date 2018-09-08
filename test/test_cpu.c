@@ -5,9 +5,8 @@ int main()
 
   /*
   test_addresses();
-  */
-
   test_stack();
+  */
 
   return 0;
 }
