@@ -1,4 +1,9 @@
+#ifndef _CPU_H
+#define _CPU_H
+
 #include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <ctype.h>
 
 #define STACK 0x100
@@ -10,19 +15,18 @@
 
 uint8_t* memory;
 
-uint8_t* read(uint16_t address);
+uint8_t* read8(uint16_t address);
 void write(uint16_t address, uint8_t data);
+int initialize_cpu();
+int deinitialize_cpu();
 
-uint8_t* sp = (uint8_t*) STACK;
+uint8_t* sp;
 uint16_t pc;
 
 uint8_t accumulator;
 uint8_t index_x;
 uint8_t index_y;
 uint8_t processor_status;
-
-int initialize_cpu();
-int deinitialize_cpu();
 
 /* Addressing modes */
 #define READ(address) ({ read(address); })
@@ -61,3 +65,5 @@ int deinitialize_cpu();
   uint16_t addr2 = ADDR_16(addr); \
   READ(addr2);\
 })
+
+#endif
