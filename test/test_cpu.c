@@ -1,11 +1,10 @@
-#include "../cpu/cpu.h" 
-#include <assert.h>
-
-void test_addresses();
+#include "test_cpu.h"
 
 int main()
 {
   test_addresses();
+
+  push_stack8(0x004D);
 
   return 0;
 }
@@ -28,6 +27,13 @@ void test_addresses()
   print_address(addr_16);
   assert(addr_16 == 0xE34D);
 
+  /* Write to memory */
+  write(0x003D, 0x4C);
+  value = READ(0x003D);
+  assert(value == 0x4C);
+
   /* Tear down */
   deinitialize_cpu();
 }
+
+void test_stack();

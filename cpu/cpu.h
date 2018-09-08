@@ -20,8 +20,10 @@ void write(uint16_t address, uint8_t data);
 int initialize_cpu();
 int deinitialize_cpu();
 void print_address(uint16_t address);
+void push_stack8(uint8_t value);
+void push_stack16(uint16_t value);
 
-uint8_t* sp;
+uint16_t sp;
 uint16_t pc;
 
 uint8_t accumulator;
