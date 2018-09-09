@@ -23,7 +23,7 @@ void write(uint16_t address, uint8_t data)
   memory[address] = data;
 }
 
-void print_address(uint16_t address)
+void print_value(uint16_t address)
 {
   printf("%#06x\n", address);
 }
@@ -72,13 +72,7 @@ uint8_t getflag(enum program_flag flag)
 
 void setflag(enum program_flag flag, uint8_t value)
 {
-  /* Depending on the value, we perform different operations to set the bit*/
-  if (value == 1)
-  {
-    processor_status |= (value << flag);
-  }
-  else
-  {
-    processor_status &= (value << flag);
-  }
+  /* Special thanks to Jeremy Ruten from StackOverflow for this code */
+  uint8_t newbit = !!value;
+  processor_status ^= (-newbit ^ processor_status) & (0x01 << flag);
 }
