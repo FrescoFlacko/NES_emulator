@@ -5,10 +5,10 @@ int main()
 
   /*
   test_addresses();
-  test_stack();
+  test_stack(); */
   test_bitman();
-  */
-  
+
+
   return 0;
 }
 

@@ -29,7 +29,7 @@ uint8_t read8(uint16_t address);
 void write(uint16_t address, uint8_t data);
 int initialize_cpu();
 int deinitialize_cpu();
-void print_address(uint16_t address);
+void print_value(uint16_t address);
 
 /* Stack functions */
 void push_stack8(uint8_t value);
