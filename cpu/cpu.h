@@ -22,7 +22,7 @@ uint8_t index_x;
 uint8_t index_y;
 uint8_t processor_status;
 
-enum program_flag {n, v, b, d, i, z, c};
+enum program_flag {c, z, i, d, b, e, v, n};
 
 /* CPU functions */
 uint8_t read8(uint16_t address);
@@ -39,8 +39,8 @@ uint16_t pop_stack16();
 
 /* Bit manipulation functions */
 uint8_t highbit(uint16_t value);
-uint8_t getbit(enum program_flag flag);
-void setbit(enum program_flag flag, uint8_t value);
+uint8_t getflag(enum program_flag flag);
+void setflag(enum program_flag flag, uint8_t value);
 
 /* Addressing modes */
 #define READ(address) ({ read8(address); })
@@ -50,7 +50,7 @@ void setbit(enum program_flag flag, uint8_t value);
   addr += (uint16_t) READ(address);\
   addr;\
 })
-#define ZERO_PAGE (address) ({ pc += 2; READ(0x0000 + address); })
+#define ZERO_PAGE (address) ({ pc += 2; READ(address); })
 #define IND_ZERO_PAGE_X (address) ({ pc += 2; READ((address + index_x % 256); })
 #define IND_ZERO_PAGE_Y (address) ({ pc += 2; READ((address + index_y % 256); })
 #define ABSOLUTE (address) ({ pc += 3; uint16_t addr = ADDR_16(address + 1); READ(addr); })
