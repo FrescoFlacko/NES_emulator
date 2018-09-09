@@ -72,5 +72,13 @@ uint8_t getflag(enum program_flag flag)
 
 void setflag(enum program_flag flag, uint8_t value)
 {
-
+  /* Depending on the value, we perform different operations to set the bit*/
+  if (value == 1)
+  {
+    processor_status |= (value << flag);
+  }
+  else
+  {
+    processor_status &= (value << flag);
+  }
 }

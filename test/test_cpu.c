@@ -6,10 +6,9 @@ int main()
   /*
   test_addresses();
   test_stack();
-  */
-
   test_bitman();
-
+  */
+  
   return 0;
 }
 
@@ -28,7 +27,6 @@ void test_addresses()
 
   /* Get 16-bit address from memory given address */
   uint16_t addr_16 = ADDR_16(0x00FD);
-  print_address(addr_16);
   assert(addr_16 == 0xE34D);
 
   /* Write to memory */
@@ -95,6 +93,9 @@ void test_bitman()
   setflag(n, 1);
   value8 = getflag(n);
   assert(value8 == 0x01);
+  setflag(n, 0);
+  value8 = getflag(n);
+  assert(value8 == 0);
 
   /* Tear down */
   deinitialize_cpu();
