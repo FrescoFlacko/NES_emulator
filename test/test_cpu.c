@@ -78,7 +78,7 @@ void test_bitman()
   initialize_cpu();
   uint8_t value8;
   uint16_t value16;
-  processor_status = 0x01;
+  processor_status = 0x80;
 
   /* Test */
 
@@ -87,8 +87,13 @@ void test_bitman()
   assert(value8 == 0x01);
 
   /* Get bit */
-  value8 = getbit(c);
-  print_address(value8); 
+  value8 = getflag(n);
+  assert(value8 == 0x01);
+
+  /* Set bit */
+  processor_status = 0;
+  setflag(n, 1);
+  value8 = getflag(n);
   assert(value8 == 0x01);
 
   /* Tear down */

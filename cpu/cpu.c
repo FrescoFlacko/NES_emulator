@@ -59,14 +59,18 @@ uint8_t highbit(uint16_t value)
   return ret;
 }
 
-uint8_t getbit(enum program_flag flag)
+/* Get flag from processor status */
+uint8_t getflag(enum program_flag flag)
 {
   uint8_t ret;
 
-  if (flag == c)
-  {
-    ret = processor_status & 0x01;
-  }
+  /* AND program flags to single out the flag we need, then shift to LSB */
+  ret = (processor_status & (0x01 << flag)) >> flag;
 
   return ret;
+}
+
+void setflag(enum program_flag flag, uint8_t value)
+{
+
 }
