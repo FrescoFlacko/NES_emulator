@@ -4,6 +4,9 @@ int initialize_cpu()
 {
   memory = calloc(65535, 8);
   sp = 0x0100;
+  accumulator = 0;
+  pc = 0;
+  processor_status = 0x20;
   return 0;
 }
 
@@ -53,7 +56,13 @@ uint16_t pop_stack16()
   return value;
 }
 
-uint8_t highbit(uint16_t value)
+uint8_t highbit8(uint8_t value)
+{
+  uint8_t ret = value >> 7;
+  return ret;
+}
+
+uint8_t highbit16(uint16_t value)
 {
   uint8_t ret = value >> 15;
   return ret;

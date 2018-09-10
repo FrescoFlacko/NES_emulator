@@ -1,9 +1,6 @@
 #include "cpu.h"
 
-#define ANC (value) ({ accumulator &= value; \
-  setflag(n, accumulator & highbit(accumulator)); \
-  setflag(c, accumulator & highbit(accumulator)); })
-  
-#define AND (value) ({ accumulator &= value; \
-  setflag(n, accumulator & highbit(accumulator)); \
-  setflag(z, !accumulator); })
+void ADC(uint8_t value);
+void AND(uint8_t value);
+void ASL(uint8_t value, uint16_t address);
+void BCC(uint8_t value);
