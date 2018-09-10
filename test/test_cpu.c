@@ -5,10 +5,10 @@ int main()
 
   /*
   test_addresses();
-  test_stack(); */
-  test_bitman();
+  test_stack();
+  test_bitman(); */
 
-
+  test_opcodes();
   return 0;
 }
 
@@ -81,7 +81,7 @@ void test_bitman()
   /* Test */
 
   /* Get most significant bit */
-  value8 = highbit(0xF000);
+  value8 = highbit16(0xF000);
   assert(value8 == 0x01);
 
   /* Get bit */
@@ -96,6 +96,24 @@ void test_bitman()
   setflag(n, 0);
   value8 = getflag(n);
   assert(value8 == 0);
+
+  /* Tear down */
+  deinitialize_cpu();
+}
+
+void test_opcodes()
+{
+  /* Set up */
+  initialize_cpu();
+  write(0x1000, 0x04);
+
+  /* Test */
+  ADC(0x4D);
+  assert(accumulator == 0x4D);
+  AND(0x3D);
+  assert(accumulator == 0x0D);
+  ASL(READ(0x1000), 0x1000);
+  assert(READ(0x1000) == 0x08);
 
   /* Tear down */
   deinitialize_cpu();

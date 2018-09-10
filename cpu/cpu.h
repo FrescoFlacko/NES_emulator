@@ -38,7 +38,8 @@ uint8_t pop_stack8();
 uint16_t pop_stack16();
 
 /* Bit manipulation functions */
-uint8_t highbit(uint16_t value);
+uint8_t highbit8(uint8_t value);
+uint8_t highbit16(uint16_t value);
 uint8_t getflag(enum program_flag flag);
 void setflag(enum program_flag flag, uint8_t value);
 
