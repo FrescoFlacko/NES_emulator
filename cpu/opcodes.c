@@ -49,3 +49,82 @@ void ASL(uint8_t value, uint16_t address)
   write(address, value);
   /* Save data */
 }
+
+void Branch(uint8_t value)
+{
+  /* clk = ((pc & 0xFF00) != (RELATIVE(pc, value) & 0xFF00) ? 2 : 1);
+  pc = RELATIVE(pc, value); */
+}
+
+void BCC(uint8_t value)
+{
+  if (!getflag(c))
+  {
+    Branch(value);
+  }
+}
+
+void BCS(uint8_t value)
+{
+  if (getflag(c))
+  {
+    Branch(value);
+  }
+}
+
+void BIT(uint8_t value)
+{
+  setflag(n, value & highbit8(value));
+  setflag(v, 0x40 & value);
+  setflag(z, value & accumulator);
+}
+
+void BMI(uint8_t value)
+{
+  if (getflag(n))
+  {
+    Branch(value);
+  }
+}
+
+void BNE(uint8_t value)
+{
+  if (!getflag(z))
+  {
+    Branch(value);
+  }
+}
+
+void BPL(uint8_t value)
+{
+  if (!getflag(n))
+  {
+    Branch(value);
+  }
+}
+
+void BRK(uint8_t value)
+{
+  pc++;
+  push_stack16(pc & 0xFF);
+  setflag(b, 1);
+  push_stack8(processor_status);
+  setflag(i, 1);
+  pc = ADDR_16(0xFFFE);
+}
+
+void BVC(uint8_t value)
+{
+  if (!getflag(v))
+  {
+    Branch(value);
+  }
+}
+
+void BVS(uint8_t value)
+{
+  if (getflag(v))
+  {
+    Branch(value);
+  }
+}
