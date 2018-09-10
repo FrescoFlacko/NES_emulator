@@ -3,12 +3,11 @@
 int main()
 {
 
-  /*
   test_addresses();
   test_stack();
-  test_bitman(); */
-
+  test_bitman();
   test_opcodes();
+
   return 0;
 }
 
@@ -18,6 +17,7 @@ void test_addresses()
   initialize_cpu();
   memory[0x00FD] = 0x4D;
   memory[0x00FE] = 0xE3;
+  uint16_t address = 0x8000;
 
   /* Test */
 
@@ -34,6 +34,10 @@ void test_addresses()
   value = READ(0x003D);
   assert(value == 0x4C);
 
+  /* Relative Addressing */
+  address = RELATIVE(address, 0xA7);
+  assert(address == 0x7FD9);
+  
   /* Tear down */
   deinitialize_cpu();
 }
@@ -108,10 +112,16 @@ void test_opcodes()
   write(0x1000, 0x04);
 
   /* Test */
+
+  /* Add with carry */
   ADC(0x4D);
   assert(accumulator == 0x4D);
+
+  /* And accumulator */
   AND(0x3D);
   assert(accumulator == 0x0D);
+
+  /* Arithmetic shift left */
   ASL(READ(0x1000), 0x1000);
   assert(READ(0x1000) == 0x08);
 

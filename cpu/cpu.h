@@ -49,33 +49,38 @@ void setflag(enum program_flag flag, uint8_t value);
   uint16_t addr = (uint16_t) READ(address + 1);\
   addr = addr << 8;\
   addr += (uint16_t) READ(address);\
-  addr;\
-})
-#define ZERO_PAGE (address) ({ pc += 2; READ(address); })
-#define IND_ZERO_PAGE_X (address) ({ pc += 2; READ((address + index_x % 256); })
-#define IND_ZERO_PAGE_Y (address) ({ pc += 2; READ((address + index_y % 256); })
-#define ABSOLUTE (address) ({ pc += 3; uint16_t addr = ADDR_16(address + 1); READ(addr); })
-#define IND_ABSOLUTE_X (address) ({ pc += 3; \
+  addr; })
+#define ZERO_PAGE(address) ({ pc += 2; READ(address); })
+#define IND_ZERO_PAGE_X(address) ({ pc += 2; READ((address + index_x % 256); })
+#define IND_ZERO_PAGE_Y(address) ({ pc += 2; READ((address + index_y % 256); })
+#define ABSOLUTE(address) ({ pc += 3; uint16_t addr = ADDR_16(address + 1); READ(addr); })
+#define IND_ABSOLUTE_X(address) ({ pc += 3; \
   uint16_t addr = ADDR_16(address + 1) + index_x; \
   READ(addr); \
 })
-#define IND_ABSOLUTE_Y (address) ({ pc += 3; \
+#define IND_ABSOLUTE_Y(address) ({ pc += 3; \
   uint16_t addr = ADDR_16(address + 1) + index_y; \
   READ(addr);\
 })
-#define INDIRECT (address) ({ pc += 3; \
+#define INDIRECT(address) ({ pc += 3; \
   uint16_t addr = ADDR_16(address + 1); \
   uint16_t addr2 = ADDR_16(addr); \
   READ(addr2);\
 })
 /* TODO: Figure out how to use this addressing mode */
-#define RELATIVE (address) ({ pc += 2; })
-#define INDEXED_INDIRECT_X (address) ({ pc += 2; \
+#define RELATIVE(address, value) ({ \
+  int type = ((value & 0x80) == 0x80) ? -1 : 1; \
+  uint8_t val = (value & (~(1 << 7))) | (0x0 < 7); \
+  uint16_t addr = address + (val * type); \
+  addr; \
+})
+
+#define INDEXED_INDIRECT_X(address) ({ pc += 2; \
   uint16_t addr = ADDR_16(READ(address) + index_x); \
   uint16_t addr2 = ADDR_16(addr); \
   READ(addr2);\
 })
-#define INDEXED_INDIRECT_Y (address) ({ pc += 2; \
+#define INDEXED_INDIRECT_Y(address) ({ pc += 2; \
   uint16_t addr = ADDR_16(READ(address) + index_y); \
   uint16_t addr2 = ADDR_16(addr); \
   READ(addr2);\
