@@ -85,7 +85,7 @@ void test_bitman()
   /* Test */
 
   /* Get most significant bit */
-  value8 = highbit16(0xF000);
+  value8 = highbit(0xF0);
   assert(value8 == 0x01);
 
   /* Get bit */
