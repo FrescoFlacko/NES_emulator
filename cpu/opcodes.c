@@ -247,19 +247,120 @@ void JSR(uint16_t address)
   pc = address;
 }
 
-/* void LDA(uint8_t value);
-void LDX(uint8_t value);
-void LDY(uint8_t value);
-void LSR(uint8_t value);
-void NOP(uint8_t value);
-void ORA(uint8_t value);
-void PHA(uint8_t value);
-void PHP(uint8_t value);
-void PLA(uint8_t value);
-void PLP(uint8_t value);
-void ROL(uint8_t value);
-void ROR(uint8_t value);
-void RTI(uint8_t value);
+void LDA(uint8_t value)
+{
+  setflag(n, value & highbit8(value));
+  setflag(z, !value);
+  accumulator = value;
+}
+
+void LDX(uint8_t value)
+{
+  setflag(n, value & highbit8(value));
+  setflag(z, !value);
+  index_x = value;
+}
+
+void LDY(uint8_t value)
+{
+  setflag(n, value & highbit8(value));
+  setflag(z, !value);
+  index_y = value;
+}
+
+void LSR(uint8_t value, uint16_t address, int mode)
+{
+  uint8_t val = value;
+  setflag(c, val & 0x01);
+  val >>= 1;
+  setflag(n, val & highbit8(val));
+  setflag(z, !val);
+
+  /* If mode = 1, then we write to address.  */
+  if (mode)
+  {
+    write(address, val);
+  }
+  else
+  {
+    accumulator = val;
+  }
+}
+
+void NOP(uint8_t value)
+{
+  /* Command does nothing */
+}
+
+void ORA(uint8_t value)
+{
+  uint8_t val = value | accumulator;
+  setflag(n, val & highbit8(val));
+  setflag(z, !val);
+  accumulator = val;
+}
+
+void PHA()
+{
+  push_stack8(accumulator);
+}
+
+void PHP()
+{
+  push_stack8(processor_status);
+}
+
+void PLA(uint8_t value)
+{
+  accumulator = pop_stack8();
+  setflag(n, accumulator & highbit8(accumulator));
+  setflag(z, !accumulator);
+}
+
+void PLP(uint8_t value)
+{
+  processor_status = pop_stack8();
+}
+
+void ROL(uint8_t value, uint16_t address, int mode)
+{
+  uint16_t _val = value << 1;
+  if (getflag(c)) _val |= 0x1;
+  setflag(c, _val > 0xFF);
+  _val &= 0xFF;
+  uint8_t val = (uint8_t) _val;
+  setflag(n, val & highbit8(val));
+  setflag(z, !val);
+
+  if (mode)
+  {
+    write(address, val);
+  }
+  else
+  {
+    accumulator = val;
+  }
+}
+
+void ROR(uint8_t value, uint16_t address, int mode)
+{
+  uint8_t val = value;
+  if (getflag(c)) val |= 0x100;
+  setflag(c, val & 0x01);
+  val >>= 1;
+  setflag(n, val & highbit8(val));
+  setflag(z, !val);
+
+  if (mode)
+  {
+    write(address, val);
+  }
+  else
+  {
+    accumulator = val;
+  }
+}
+/* void RTI(uint8_t value);
 void RTS(uint8_t value);
 void SBC(uint8_t value);
 void SEC(uint8_t value);
