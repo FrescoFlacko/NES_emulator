@@ -3,10 +3,10 @@
 int main()
 {
 
-  test_addresses();
+  /* test_addresses();
   test_stack();
   test_bitman();
-  test_opcodes();
+  test_opcodes(); */
 
   return 0;
 }
@@ -37,7 +37,7 @@ void test_addresses()
   /* Relative Addressing */
   address = RELATIVE(address, 0xA7);
   assert(address == 0x7FD9);
-  
+
   /* Tear down */
   deinitialize_cpu();
 }

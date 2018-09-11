@@ -163,8 +163,8 @@ void CPX(uint8_t value)
 {
   uint16_t val = index_x - value;
   setflag(n, val & highbit8(val));
-  setflag(c, accumulator >= value);
-  setflag(z, accumulator == value);
+  setflag(c, val < 0x100);
+  setflag(z, !val);
 }
 
 void CPY(uint8_t value)
@@ -172,14 +172,44 @@ void CPY(uint8_t value)
   uint16_t val = index_y - value;
   setflag(n, val & highbit8(val));
   setflag(c, val < 0x100);
-  setflag(z, val &= 0xFF);
+  setflag(z, !val);
 }
 
-/* void DEC(uint8_t value);
-void DEX(uint8_t value);
-void DEY(uint8_t value);
-void EOR(uint8_t value);
-void INC(uint8_t value);
+void DEC(uint16_t address, uint8_t value)
+{
+  uint8_t val = (value - 1) & 0xFF;
+  setflag(n, val & highbit8(val));
+  setflag(z, !val);
+  write(address, val);
+}
+
+void DEX()
+{
+  uint8_t val = index_x;
+  val = (val - 1) & 0xFF;
+  setflag(n, val & highbit8(val));
+  setflag(z, !val);
+  index_x = val;
+}
+
+void DEY(uint8_t value)
+{
+  uint8_t val = index_y;
+  val = (val - 1) & 0xFF;
+  setflag(n, val & highbit8(val));
+  setflag(z, !val);
+  index_y = val;
+}
+
+void EOR(uint8_t value)
+{
+  uint8_t val = value ^ accumulator;
+  setflag(n, val & highbit8(val));
+  setflag(z, !val);
+  accumulator = val;
+}
+
+/* void INC(uint8_t value);
 void INX(uint8_t value);
 void INY(uint8_t value);
 void JMP(uint8_t value);
