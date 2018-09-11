@@ -192,7 +192,7 @@ void DEX()
   index_x = val;
 }
 
-void DEY(uint8_t value)
+void DEY()
 {
   uint8_t val = index_y;
   val = (val - 1) & 0xFF;
@@ -209,12 +209,45 @@ void EOR(uint8_t value)
   accumulator = val;
 }
 
-/* void INC(uint8_t value);
-void INX(uint8_t value);
-void INY(uint8_t value);
-void JMP(uint8_t value);
-void JSR(uint8_t value);
-void LDA(uint8_t value);
+void INC(uint16_t address, uint8_t value)
+{
+  uint8_t val = (value + 1) & 0xFF;
+  setflag(n, val & highbit8(val));
+  setflag(z, !val);
+  write(address, value);
+}
+
+void INX()
+{
+  uint8_t val = index_x;
+  val = (val + 1) & 0xFF;
+  setflag(n, val & highbit8(val));
+  setflag(z, !val);
+  index_x = val;
+}
+
+void INY()
+{
+  uint8_t val = index_y;
+  val = (val + 1) & 0xFF;
+  setflag(n, val & highbit8(val));
+  setflag(z, !val);
+  index_y = val;
+}
+
+void JMP(uint16_t address)
+{
+  pc = address;
+}
+
+void JSR(uint16_t address)
+{
+  pc--;
+  push_stack16(pc);
+  pc = address;
+}
+
+/* void LDA(uint8_t value);
 void LDX(uint8_t value);
 void LDY(uint8_t value);
 void LSR(uint8_t value);
