@@ -128,3 +128,87 @@ void BVS(uint8_t value)
     Branch(value);
   }
 }
+
+void CLC(uint8_t value)
+{
+  setflag(c, 0);
+}
+
+void CLD(uint8_t value)
+{
+  setflag(d, 0);
+}
+
+void CLI(uint8_t value)
+{
+  setflag(i, 0);
+}
+
+void CLV(uint8_t value)
+{
+  setflag(v, 0);
+}
+
+void CMP(uint8_t value)
+{
+  uint16_t val = accumulator - value;
+
+  /* If val = 0, accumulator = value. If val < 0, accumulator < value. */
+  setflag(n, val & highbit8(val));
+  setflag(c, val < 0x100);
+  setflag(z, val &= 0xFF);
+}
+
+void CPX(uint8_t value)
+{
+  uint16_t val = index_x - value;
+  setflag(n, val & highbit8(val));
+  setflag(c, accumulator >= value);
+  setflag(z, accumulator == value);
+}
+
+void CPY(uint8_t value)
+{
+  uint16_t val = index_y - value;
+  setflag(n, val & highbit8(val));
+  setflag(c, val < 0x100);
+  setflag(z, val &= 0xFF);
+}
+
+/* void DEC(uint8_t value);
+void DEX(uint8_t value);
+void DEY(uint8_t value);
+void EOR(uint8_t value);
+void INC(uint8_t value);
+void INX(uint8_t value);
+void INY(uint8_t value);
+void JMP(uint8_t value);
+void JSR(uint8_t value);
+void LDA(uint8_t value);
+void LDX(uint8_t value);
+void LDY(uint8_t value);
+void LSR(uint8_t value);
+void NOP(uint8_t value);
+void ORA(uint8_t value);
+void PHA(uint8_t value);
+void PHP(uint8_t value);
+void PLA(uint8_t value);
+void PLP(uint8_t value);
+void ROL(uint8_t value);
+void ROR(uint8_t value);
+void RTI(uint8_t value);
+void RTS(uint8_t value);
+void SBC(uint8_t value);
+void SEC(uint8_t value);
+void SED(uint8_t value);
+void SEI(uint8_t value);
+void STA(uint16_t address, uint8_t value);
+void STX(uint16_t address, uint8_t value);
+void STY(uint16_t address, uint8_t value);
+void TAX(uint8_t value);
+void TAY(uint8_t value);
+void TSX(uint8_t value);
+void TXA(uint8_t value);
+void TXS(uint8_t value);
+void TYA(uint8_t value);
+*/
