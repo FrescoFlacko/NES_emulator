@@ -2,33 +2,33 @@
 
 void ADC(uint8_t value)
 {
-  uint16_t temp = value + accumulator + getflag(c);
-  setflag(z, temp & 0xFF);
+  uint16_t result = value + accumulator + getflag(c);
+  setflag(z, result & 0xFF);
 
   if (getflag(d))
   {
     if (((accumulator & 0x0F) + (value & 0x0F) + getflag(c)) > 0x09)
     {
-      temp += 0x06;
+      result += 0x06;
     }
-    setflag(n, temp & highbit(temp));
-    setflag(v, !((accumulator ^ value) & 0x80) && ((accumulator ^ temp) & 0x80));
+    setflag(n, result & highbit(result));
+    setflag(v, !((accumulator ^ value) & 0x80) && ((accumulator ^ result) & 0x80));
 
-    if (temp > 0x99)
+    if (result > 0x99)
     {
-      temp += 0x60;
+      result += 0x60;
     }
 
-    setflag(c, temp > 0x99);
+    setflag(c, result > 0x99);
   }
   else
   {
-    setflag(n, temp & highbit(temp));
-    setflag(v, !((accumulator ^ value) & 0x80) && ((accumulator ^ temp) & 0x80));
-    setflag(c, temp > 0xFF);
+    setflag(n, result & highbit(result));
+    setflag(v, !((accumulator ^ value) & 0x80) && ((accumulator ^ result) & 0x80));
+    setflag(c, result > 0xFF);
   }
 
-  accumulator = (uint8_t) temp;
+  accumulator = (uint8_t) result;
 }
 
 /* And value with accumulator then move Negative flag to Carry flag */
@@ -47,14 +47,22 @@ void AND(uint8_t value)
   accumulator = result;
 }
 
-void ASL(uint8_t value, uint16_t address)
+void ASL(uint8_t value, uint16_t address, int mode)
 {
   setflag(c, value & 0x80);
   value <<= 1;
   value &= 0xFF;
   setflag(n, value & highbit(value));
   setflag(z, !value);
-  write(address, value);
+
+  if (mode)
+  {
+    write(address, value);
+  }
+  else
+  {
+    accumulator = value;
+  }
   /* Save data */
 }
 
@@ -183,6 +191,14 @@ void CPY(uint8_t value)
   setflag(z, !val);
 }
 
+void DCP(uint8_t value)
+{
+  value--;
+  setflag(n, (accumulator - value) & highbit(accumulator - value));
+  setflag(z, accumulator == value);
+  setflag(c, accumulator >= value);
+}
+
 void DEC(uint16_t address, uint8_t value)
 {
   uint8_t val = (value - 1) & 0xFF;
@@ -253,6 +269,13 @@ void JSR(uint16_t address)
   pc--;
   push_stack16(pc);
   pc = address;
+}
+
+void LAX(uint8_t value)
+{
+  accumulator = index_x = value;
+  setflag(n, accumulator & highbit(accumulator));
+  setflag(z, !accumulator);
 }
 
 void LDA(uint8_t value)
@@ -330,6 +353,25 @@ void PLP(uint8_t value)
   processor_status = pop_stack8();
 }
 
+void RLA(uint8_t value)
+{
+  uint8_t val = value;
+  setflag(c, val & highbit(val));
+
+  if (getflag(c))
+  {
+    val += val + 1;
+  }
+  else
+  {
+    val <<= 1;
+  }
+
+  accumulator &= val;
+  setflag(n, accumulator & highbit(accumulator));
+  setflag(z, !accumulator);
+}
+
 void ROL(uint8_t value, uint16_t address, int mode)
 {
   uint16_t _val = value << 1;
@@ -368,6 +410,55 @@ void ROR(uint8_t value, uint16_t address, int mode)
     accumulator = val;
   }
 }
+
+void RRA(uint8_t value)
+{
+  setflag(c, value & 0x01);
+
+  if (getflag(c))
+  {
+    value = (value >> 1) + highbit(value);
+  }
+  else
+  {
+    value >>= 1;
+  }
+
+  if (getflag(d))
+  {
+    uint16_t result = (accumulator & 0x0F) + (value & 0x0F) + getflag(c);
+
+    if (result > 0x09)
+    {
+      result = (result - 0x0A) | 0x10;
+    }
+
+    result += (accumulator & 0xF0) + (value & 0xF0);
+
+    setflag(z, !(accumulator + value + c));
+    setflag(n, result & highbit(result));
+    setflag(v, (~(accumulator ^ value) & (accumulator ^ result)) & highbit(~(accumulator ^ value) & (accumulator ^ result)));
+
+    if (result > 0x9F)
+    {
+      result += 0x60;
+    }
+
+    setflag(c, result > 0xFF);
+    accumulator = (uint8_t) result;
+  }
+  else
+  {
+    uint16_t result = accumulator + value + getflag(c);
+    setflag(n, result & highbit(result));
+    setflag(v, (~(accumulator ^ value) & (accumulator ^ result)) & highbit(~(accumulator ^ value) & (accumulator ^ result)));
+    setflag(c, result > 0xFF);
+    accumulator = (uint8_t) result;
+    setflag(z, !accumulator);
+
+  }
+}
+
 void RTI(uint8_t value)
 {
   processor_status = pop_stack8();
@@ -377,6 +468,15 @@ void RTI(uint8_t value)
 void RTS(uint8_t value)
 {
   pc = pop_stack16() + 1;
+}
+
+void SAX(uint8_t value)
+{
+  index_x &= accumulator;
+  setflag(c, index_x >= value);
+  index_x -= value;
+  setflag(n, index_x & highbit(index_x));
+  setflag(z, !index_x);
 }
 
 void SBC(uint8_t value)
@@ -421,6 +521,15 @@ void SLO(uint8_t value)
   val <<= 1;
   accumulator |= val;
   setflag(n, accumulator & highbit(val));
+  setflag(z, !accumulator);
+}
+
+void SRE(uint8_t value)
+{
+  setflag(c, value & 0x01);
+  value >>= 1;
+  accumulator ^= value;
+  setflag(n, accumulator & highbit(accumulator));
   setflag(z, !accumulator);
 }
 
