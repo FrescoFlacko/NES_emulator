@@ -259,6 +259,47 @@ void INY()
   index_y = val;
 }
 
+void ISC(uint8_t value)
+{
+  value++;
+  uint8_t result = value + !getflag(c);
+  setflag(c, result <= accumulator);
+
+  if (!getflag(d))
+  {
+    result = (accumulator - result);
+    setflag(v, ((accumulator ^ value) & (accumulator ^ result)) & highbit((accumulator ^ value) & (accumulator ^ result)));
+    setflag(n, result & highbit(result));
+    setflag(z, !result);
+  }
+  else
+  {
+    uint16_t temp1 = (accumulator & 0x0F) - (result & 0x0F);
+    uint16_t temp2 = (accumulator >> 4) - (result >> 4);
+
+    if (temp1 & 0x10)
+    {
+      temp1 -= 0x06;
+      temp2--;
+    }
+
+    if (temp2 & 0x10)
+    {
+      temp2 -= 0x06;
+    }
+
+    result = ((temp2 << 4) | (temp1 & 0x0F));
+
+    uint8_t temp0 = accumulator - result;
+    setflag(v, ((accumulator ^ value) & (accumulator ^ temp0)) & highbit((accumulator ^ value) & (accumulator ^ temp0)));
+    setflag(n, temp0 & highbit(temp0));
+    setflag(z, !temp0);
+
+  }
+
+  accumulator = result;
+}
+
 void JMP(uint16_t address)
 {
   pc = address;
