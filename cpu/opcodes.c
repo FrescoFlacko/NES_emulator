@@ -31,6 +31,14 @@ void ADC(uint8_t value)
   accumulator = (uint8_t) temp;
 }
 
+/* And value with accumulator then move Negative flag to Carry flag */
+void ANC(uint8_t value)
+{
+  accumulator &= value;
+  setflag(n, accumulator & highbit(accumulator));
+  setflag(c, accumulator & highbit(accumulator));
+}
+
 void AND(uint8_t value)
 {
   uint8_t result = value & accumulator;
@@ -413,6 +421,7 @@ void SLO(uint8_t value)
   val <<= 1;
   accumulator |= val;
   setflag(n, accumulator & highbit(val));
+  setflag(z, !accumulator);
 }
 
 void STA(uint16_t address, uint8_t value)
