@@ -22,6 +22,8 @@ uint8_t index_x;
 uint8_t index_y;
 uint8_t processor_status;
 
+int cycles;
+
 enum program_flag {c, z, i, d, b, e, v, n};
 
 /* CPU functions */
@@ -85,5 +87,6 @@ void setflag(enum program_flag flag, uint8_t value);
   uint16_t addr2 = ADDR_16(addr); \
   READ(addr2);\
 })
+#define IMMEDIATE(address) ({ address; })
 
 #endif
