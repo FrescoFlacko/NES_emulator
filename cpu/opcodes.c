@@ -360,19 +360,109 @@ void ROR(uint8_t value, uint16_t address, int mode)
     accumulator = val;
   }
 }
-/* void RTI(uint8_t value);
-void RTS(uint8_t value);
-void SBC(uint8_t value);
-void SEC(uint8_t value);
-void SED(uint8_t value);
-void SEI(uint8_t value);
-void STA(uint16_t address, uint8_t value);
-void STX(uint16_t address, uint8_t value);
-void STY(uint16_t address, uint8_t value);
-void TAX(uint8_t value);
-void TAY(uint8_t value);
-void TSX(uint8_t value);
-void TXA(uint8_t value);
-void TXS(uint8_t value);
-void TYA(uint8_t value);
-*/
+void RTI(uint8_t value)
+{
+  processor_status = pop_stack8();
+  pc = pop_stack16();
+}
+
+void RTS(uint8_t value)
+{
+  pc = pop_stack16() + 1;
+}
+
+void SBC(uint8_t value)
+{
+  uint16_t val = accumulator - value - (getflag(c) ? 0 : 1);
+  setflag(n, val & highbit8(val));
+  setflag(z, val & 0xFF);
+  setflag(v, ((accumulator ^ val) & 0x80) && ((accumulator ^ value) & 0x80));
+
+  if (getflag(d))
+  {
+    if (((accumulator & 0xF) - (getflag(c) ? 0 : 1)) < (value & 0xF))
+      val -= 0x06;
+
+    if (val > 0x99)
+      val -= 0x60;
+  }
+
+  setflag(c, val < 0x100);
+  accumulator = (uint8_t) (val & 0xFF);
+}
+
+void SEC(uint8_t value)
+{
+  setflag(c, 1);
+}
+
+void SED(uint8_t value)
+{
+  setflag(d, 1);
+}
+
+void SEI(uint8_t value)
+{
+  setflag(i, 1);
+}
+
+void STA(uint16_t address, uint8_t value)
+{
+  write(address, value);
+}
+
+void STX(uint16_t address)
+{
+  write(address, index_x);
+}
+
+void STY(uint16_t address)
+{
+  write(address, index_y);
+}
+
+void TAX()
+{
+  uint8_t val = accumulator;
+  setflag(n, val & highbit8(val));
+  setflag(z, !val);
+  index_x = val;
+}
+
+void TAY()
+{
+  uint8_t val = accumulator;
+  setflag(n, val & highbit8(val));
+  setflag(z, !val);
+  index_y = val;
+}
+
+void TSX()
+{
+  uint8_t val = sp;
+  setflag(n, val & highbit8(val));
+  setflag(z, !val);
+  index_x = val;
+}
+
+void TXA()
+{
+  uint8_t val = index_x;
+  setflag(n, val & highbit8(val));
+  setflag(z, !val);
+  accumulator = val;
+}
+
+void TXS()
+{
+  uint8_t val = index_x;
+  sp = val;
+}
+
+void TYA()
+{
+  uint8_t val = index_y;
+  setflag(n, val & highbit8(val));
+  setflag(z, !val);
+  accumulator = val;
+}
