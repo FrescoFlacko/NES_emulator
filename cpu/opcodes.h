@@ -45,6 +45,7 @@ void EOR(uint8_t value);
 void INC(uint16_t address, uint8_t value);
 void INX();
 void INY();
+void ISC(uint8_t value);
 void JMP(uint16_t address);
 void JSR(uint16_t address);
 void LAX(uint8_t value);
