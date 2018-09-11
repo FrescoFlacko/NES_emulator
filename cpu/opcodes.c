@@ -11,7 +11,7 @@ void ADC(uint8_t value)
     {
       temp += 0x06;
     }
-    setflag(n, temp & highbit8(temp));
+    setflag(n, temp & highbit(temp));
     setflag(v, !((accumulator ^ value) & 0x80) && ((accumulator ^ temp) & 0x80));
 
     if (temp > 0x99)
@@ -23,7 +23,7 @@ void ADC(uint8_t value)
   }
   else
   {
-    setflag(n, temp & highbit8(temp));
+    setflag(n, temp & highbit(temp));
     setflag(v, !((accumulator ^ value) & 0x80) && ((accumulator ^ temp) & 0x80));
     setflag(c, temp > 0xFF);
   }
@@ -34,8 +34,8 @@ void ADC(uint8_t value)
 void AND(uint8_t value)
 {
   uint8_t result = value & accumulator;
-  setflag(n, result & highbit8(result));
-  setflag(z, result & highbit8(result));
+  setflag(n, result & highbit(result));
+  setflag(z, result & highbit(result));
   accumulator = result;
 }
 
@@ -44,7 +44,7 @@ void ASL(uint8_t value, uint16_t address)
   setflag(c, value & 0x80);
   value <<= 1;
   value &= 0xFF;
-  setflag(n, value & highbit8(value));
+  setflag(n, value & highbit(value));
   setflag(z, !value);
   write(address, value);
   /* Save data */
@@ -74,7 +74,7 @@ void BCS(uint8_t value)
 
 void BIT(uint8_t value)
 {
-  setflag(n, value & highbit8(value));
+  setflag(n, value & highbit(value));
   setflag(v, 0x40 & value);
   setflag(z, value & accumulator);
 }
@@ -154,7 +154,7 @@ void CMP(uint8_t value)
   uint16_t val = accumulator - value;
 
   /* If val = 0, accumulator = value. If val < 0, accumulator < value. */
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(c, val < 0x100);
   setflag(z, val &= 0xFF);
 }
@@ -162,7 +162,7 @@ void CMP(uint8_t value)
 void CPX(uint8_t value)
 {
   uint16_t val = index_x - value;
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(c, val < 0x100);
   setflag(z, !val);
 }
@@ -170,7 +170,7 @@ void CPX(uint8_t value)
 void CPY(uint8_t value)
 {
   uint16_t val = index_y - value;
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(c, val < 0x100);
   setflag(z, !val);
 }
@@ -178,7 +178,7 @@ void CPY(uint8_t value)
 void DEC(uint16_t address, uint8_t value)
 {
   uint8_t val = (value - 1) & 0xFF;
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(z, !val);
   write(address, val);
 }
@@ -187,7 +187,7 @@ void DEX()
 {
   uint8_t val = index_x;
   val = (val - 1) & 0xFF;
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(z, !val);
   index_x = val;
 }
@@ -196,7 +196,7 @@ void DEY()
 {
   uint8_t val = index_y;
   val = (val - 1) & 0xFF;
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(z, !val);
   index_y = val;
 }
@@ -204,7 +204,7 @@ void DEY()
 void EOR(uint8_t value)
 {
   uint8_t val = value ^ accumulator;
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(z, !val);
   accumulator = val;
 }
@@ -212,7 +212,7 @@ void EOR(uint8_t value)
 void INC(uint16_t address, uint8_t value)
 {
   uint8_t val = (value + 1) & 0xFF;
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(z, !val);
   write(address, value);
 }
@@ -221,7 +221,7 @@ void INX()
 {
   uint8_t val = index_x;
   val = (val + 1) & 0xFF;
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(z, !val);
   index_x = val;
 }
@@ -230,7 +230,7 @@ void INY()
 {
   uint8_t val = index_y;
   val = (val + 1) & 0xFF;
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(z, !val);
   index_y = val;
 }
@@ -249,21 +249,21 @@ void JSR(uint16_t address)
 
 void LDA(uint8_t value)
 {
-  setflag(n, value & highbit8(value));
+  setflag(n, value & highbit(value));
   setflag(z, !value);
   accumulator = value;
 }
 
 void LDX(uint8_t value)
 {
-  setflag(n, value & highbit8(value));
+  setflag(n, value & highbit(value));
   setflag(z, !value);
   index_x = value;
 }
 
 void LDY(uint8_t value)
 {
-  setflag(n, value & highbit8(value));
+  setflag(n, value & highbit(value));
   setflag(z, !value);
   index_y = value;
 }
@@ -273,7 +273,7 @@ void LSR(uint8_t value, uint16_t address, int mode)
   uint8_t val = value;
   setflag(c, val & 0x01);
   val >>= 1;
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(z, !val);
 
   /* If mode = 1, then we write to address.  */
@@ -295,7 +295,7 @@ void NOP(uint8_t value)
 void ORA(uint8_t value)
 {
   uint8_t val = value | accumulator;
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(z, !val);
   accumulator = val;
 }
@@ -313,7 +313,7 @@ void PHP()
 void PLA(uint8_t value)
 {
   accumulator = pop_stack8();
-  setflag(n, accumulator & highbit8(accumulator));
+  setflag(n, accumulator & highbit(accumulator));
   setflag(z, !accumulator);
 }
 
@@ -329,7 +329,7 @@ void ROL(uint8_t value, uint16_t address, int mode)
   setflag(c, _val > 0xFF);
   _val &= 0xFF;
   uint8_t val = (uint8_t) _val;
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(z, !val);
 
   if (mode)
@@ -348,7 +348,7 @@ void ROR(uint8_t value, uint16_t address, int mode)
   if (getflag(c)) val |= 0x100;
   setflag(c, val & 0x01);
   val >>= 1;
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(z, !val);
 
   if (mode)
@@ -374,7 +374,7 @@ void RTS(uint8_t value)
 void SBC(uint8_t value)
 {
   uint16_t val = accumulator - value - (getflag(c) ? 0 : 1);
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(z, val & 0xFF);
   setflag(v, ((accumulator ^ val) & 0x80) && ((accumulator ^ value) & 0x80));
 
@@ -406,6 +406,15 @@ void SEI(uint8_t value)
   setflag(i, 1);
 }
 
+void SLO(uint8_t value)
+{
+  uint8_t val = value;
+  setflag(c, val & highbit(val));
+  val <<= 1;
+  accumulator |= val;
+  setflag(n, accumulator & highbit(val));
+}
+
 void STA(uint16_t address, uint8_t value)
 {
   write(address, value);
@@ -424,7 +433,7 @@ void STY(uint16_t address)
 void TAX()
 {
   uint8_t val = accumulator;
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(z, !val);
   index_x = val;
 }
@@ -432,7 +441,7 @@ void TAX()
 void TAY()
 {
   uint8_t val = accumulator;
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(z, !val);
   index_y = val;
 }
@@ -440,7 +449,7 @@ void TAY()
 void TSX()
 {
   uint8_t val = sp;
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(z, !val);
   index_x = val;
 }
@@ -448,7 +457,7 @@ void TSX()
 void TXA()
 {
   uint8_t val = index_x;
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(z, !val);
   accumulator = val;
 }
@@ -462,7 +471,7 @@ void TXS()
 void TYA()
 {
   uint8_t val = index_y;
-  setflag(n, val & highbit8(val));
+  setflag(n, val & highbit(val));
   setflag(z, !val);
   accumulator = val;
 }

@@ -63,6 +63,7 @@ void SBC(uint8_t value);
 void SEC(uint8_t value);
 void SED(uint8_t value);
 void SEI(uint8_t value);
+void SLO(uint8_t value);
 void STA(uint16_t address, uint8_t value);
 void STX(uint16_t address);
 void STY(uint16_t address);

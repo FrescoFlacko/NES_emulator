@@ -56,15 +56,9 @@ uint16_t pop_stack16()
   return value;
 }
 
-uint8_t highbit8(uint8_t value)
+uint8_t highbit(uint8_t value)
 {
   uint8_t ret = value >> 7;
-  return ret;
-}
-
-uint8_t highbit16(uint16_t value)
-{
-  uint8_t ret = value >> 15;
   return ret;
 }
 
