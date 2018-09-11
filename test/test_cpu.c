@@ -122,7 +122,7 @@ void test_opcodes()
   assert(accumulator == 0x0D);
 
   /* Arithmetic shift left */
-  ASL(READ(0x1000), 0x1000);
+  ASL(READ(0x1000), 0x1000, 1);
   assert(READ(0x1000) == 0x08);
 
   /* Tear down */
