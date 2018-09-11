@@ -1,20 +1,19 @@
+#include "cpu.h"
+
 #ifndef C_OPCODES_H
 #define C_OPCODES_H
-
-#include "cpu.h"
 
 enum address_mode { zero_page, ind_zero_page, absolute, ind_absolute, indirect, immediate, relative, ind_indirect};
 
 struct instruction
 {
-  uint8_t opcode;
   char name[3];
   enum address_mode mode;
   int size;
   int cycles;
 };
 
-
+extern struct instruction instruction_set[256];
 
 void ADC(uint8_t value);
 void AND(uint8_t value);
