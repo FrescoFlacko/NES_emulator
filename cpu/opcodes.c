@@ -31,6 +31,15 @@ void ADC(uint8_t value)
   accumulator = (uint8_t) result;
 }
 
+void ALR(uint8_t value)
+{
+  accumulator &= value;
+  setflag(c, accumulator & 0x01);
+  accumulator >>= 1;
+  setflag(z, !accumulator);
+  setflag(n, accumulator & highbit(accumulator));
+}
+
 /* And value with accumulator then move Negative flag to Carry flag */
 void ANC(uint8_t value)
 {
