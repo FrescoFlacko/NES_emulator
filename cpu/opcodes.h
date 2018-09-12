@@ -16,6 +16,7 @@ struct instruction
 extern struct instruction instruction_set[256];
 
 void ADC(uint8_t value);
+void ALR(uint8_t value);
 void ANC(uint8_t value);
 void AND(uint8_t value);
 void ASL(uint8_t value, uint16_t address, int mode);
