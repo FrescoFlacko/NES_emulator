@@ -19,6 +19,7 @@ void ADC(uint8_t value);
 void ALR(uint8_t value);
 void ANC(uint8_t value);
 void AND(uint8_t value);
+void ARR(uint8_t value);
 void ASL(uint8_t value, uint16_t address, int mode);
 void Branch(uint8_t value);
 void BCC(uint8_t value);
