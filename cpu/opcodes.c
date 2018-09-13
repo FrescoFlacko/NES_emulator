@@ -56,6 +56,41 @@ void AND(uint8_t value)
   accumulator = result;
 }
 
+void ARR(uint8_t value)
+{
+  uint8_t result = accumulator & value;
+  result >>= 1;
+
+  if (getflag(c))
+  {
+    result |= highbit(result);
+  }
+
+  setflag(n, getflag(c));
+  setflag(z, !result);
+
+  if (getflag(d))
+  {
+    setflag(v, (result ^ value) & 0x40);
+
+    if ((value & 0x0F) + (value & 0x01) > 0x05)
+      result = (result & 0xF0) | ((result + 0x06) & 0x0F);
+    if ((value & 0xF0) + (value & 0x10) > 0x50) {
+      result = (result & 0x0F) | ((result + 0x60) & 0xF0);
+      setflag(c, 1);
+    } else {
+      setflag(c, 0);
+    }
+  }
+  else
+  {
+    setflag(c, result & 0x40);
+    setflag(v, ((result >> 6) ^ (result >> 5)) & 0x01);
+  }
+
+  accumulator = result;
+}
+
 void ASL(uint8_t value, uint16_t address, int mode)
 {
   setflag(c, value & 0x80);
