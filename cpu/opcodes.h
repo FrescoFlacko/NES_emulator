@@ -3,7 +3,7 @@
 #ifndef C_OPCODES_H
 #define C_OPCODES_H
 
-enum address_mode { zero_page, ind_zero_page, absolute, ind_absolute, indirect, immediate, relative, ind_indirect};
+enum address_mode { zero_page, ind_zero_page, absolute, ind_absolute, indirect, immediate, relative, indexed_indirect, implied, indirect_indexed};
 
 struct instruction
 {
@@ -16,11 +16,13 @@ struct instruction
 extern struct instruction instruction_set[256];
 
 void ADC(uint8_t value);
+void AHX(uint16_t address);
 void ALR(uint8_t value);
 void ANC(uint8_t value);
 void AND(uint8_t value);
 void ARR(uint8_t value);
 void ASL(uint8_t value, uint16_t address, int mode);
+void AXS();
 void Branch(uint8_t value);
 void BCC(uint8_t value);
 void BCS(uint8_t value);
@@ -29,7 +31,7 @@ void BIT(uint8_t value);
 void BMI(uint8_t value);
 void BNE(uint8_t value);
 void BPL(uint8_t value);
-void BRK(uint8_t value);
+void BRK();
 void BVC(uint8_t value);
 void BVS(uint8_t value);
 void CLC(uint8_t value);
@@ -50,6 +52,7 @@ void INY();
 void ISC(uint8_t value);
 void JMP(uint16_t address);
 void JSR(uint16_t address);
+void LAS(uint8_t value);
 void LAX(uint8_t value);
 void LDA(uint8_t value);
 void LDX(uint8_t value);
@@ -77,11 +80,13 @@ void SRE(uint8_t value);
 void STA(uint16_t address, uint8_t value);
 void STX(uint16_t address);
 void STY(uint16_t address);
+void TAS(uint16_t address);
 void TAX();
 void TAY();
 void TSX();
 void TXA();
 void TXS();
 void TYA();
+void XAA(uint8_t value);
 
 #endif
