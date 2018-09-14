@@ -31,6 +31,12 @@ void ADC(uint8_t value)
   accumulator = (uint8_t) result;
 }
 
+void AHX(uint16_t address)
+{
+  uint8_t temp = ((address >> 8) + 1) & accumulator & index_x;
+  write(address, temp & 0xFF);
+}
+
 void ALR(uint8_t value)
 {
   accumulator &= value;
@@ -107,13 +113,19 @@ void ASL(uint8_t value, uint16_t address, int mode)
   {
     accumulator = value;
   }
-  /* Save data */
+}
+
+void AXS()
+{
+  uint8_t temp = accumulator;
+  accumulator = index_x;
+  index_x = temp;
 }
 
 void Branch(uint8_t value)
 {
-  /* clk = ((pc & 0xFF00) != (RELATIVE(pc, value) & 0xFF00) ? 2 : 1);
-  pc = RELATIVE(pc, value); */
+  cycles = ((pc & 0xFF00) != (RELATIVE(pc, value) & 0xFF00) ? 2 : 1);
+  pc = RELATIVE(pc, value);
 }
 
 void BCC(uint8_t value)
@@ -163,7 +175,7 @@ void BPL(uint8_t value)
   }
 }
 
-void BRK(uint8_t value)
+void BRK()
 {
   pc++;
   push_stack16(pc & 0xFF);
@@ -354,6 +366,13 @@ void JSR(uint16_t address)
   pc--;
   push_stack16(pc);
   pc = address;
+}
+
+void LAS(uint8_t value)
+{
+  accumulator = index_x = sp &= value;
+  setflag(n, accumulator & highbit(accumulator));
+  setflag(z, !accumulator);
 }
 
 void LAX(uint8_t value)
@@ -633,6 +652,13 @@ void STY(uint16_t address)
   write(address, index_y);
 }
 
+void TAS(uint16_t address)
+{
+  sp = accumulator & index_x;
+  uint8_t result = sp & ((address >> 8) + 1);
+  write(address + index_y, result);
+}
+
 void TAX()
 {
   uint8_t val = accumulator;
@@ -677,4 +703,12 @@ void TYA()
   setflag(n, val & highbit(val));
   setflag(z, !val);
   accumulator = val;
+}
+
+void XAA(uint8_t value)
+{
+  uint8_t result = accumulator & index_x & value;
+  setflag(n, result & highbit(result));
+  setflag(z, !result);
+  accumulator &= index_x & (value | 0xEF);
 }
