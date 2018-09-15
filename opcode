@@ -7,17 +7,31 @@
 # 6 : "relative",
 # 7 : "indexed_indirect",
 # 8 : "implied",
-# 9 : "indirect_indexed"}xw
+# 9 : "indirect_indexed"}
+
+# address_modes =
+# {0 : "ZERO_PAGE",
+# 1 : "IND_ZERO_PAGE_X",
+# 2: "IND_ZERO_PAGE_Y",
+# 3 : "ABSOLUTE",
+# 4 : "IND_ABSOLUTE_X",
+# 5 : "IND_ABSOLUTE_Y",
+# 6 : "INDIRECT",
+# 7 : "RELATIVE",
+# 8 : "INDEXED_INDIRECT_X",
+# 9 : "INDEXED_INDIRECT_Y",
+# 10 : "IMMEDIATE" }
+
 BRK,4,8,2,7
-ORA,0,7,2,6
+ORA,0,8,2,6
 STP,4,0,1,1
-SLO,0,7,2,8
+SLO,0,8,2,8
 NOP,0,0,1,1
 ORA,0,0,2,3
 ASL,3,0,2,5
 SLO,0,0,2,5
 PHP,4,0,1,3
-ORA,0,5,2,2
+ORA,0,10,2,2
 ASL,3,0,1,2
 ANC,0,5,2,2
 NOP,0,2,1,1
