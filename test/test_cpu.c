@@ -1,130 +1,162 @@
-#include "test_cpu.h"
+#include <stdio.h>
+#include <assert.h>
+#include <string.h>
+#ifndef CPU_TEST_HELPERS
+#define CPU_TEST_HELPERS
+#endif
+#include "cpu/cpu.h"
+#include "bus/bus.h"
+#include "cartridge/cartridge.h"
 
-int main()
-{
+static void test_cpu_init(void) {
+    Bus bus;
+    CPU cpu;
 
-  /* test_addresses();
-  test_stack();
-  test_bitman();
-  test_opcodes(); */
+    bus_init(&bus);
+    cpu_init(&cpu, &bus);
 
-  return 0;
+    assert(cpu.S == 0xFD);
+    assert((cpu.P & FLAG_U) != 0);
+    assert((cpu.P & FLAG_I) != 0);
+    assert(cpu.A == 0);
+    assert(cpu.X == 0);
+    assert(cpu.Y == 0);
+    printf("test_cpu_init: PASS\n");
 }
 
-void test_addresses()
-{
-  /* Set up */
-  initialize_cpu();
-  memory[0x00FD] = 0x4D;
-  memory[0x00FE] = 0xE3;
-  uint16_t address = 0x8000;
+static void test_ram_mirroring(void) {
+    Bus bus;
+    bus_init(&bus);
 
-  /* Test */
+    bus_write(&bus, 0x0000, 0x42);
+    assert(bus_read(&bus, 0x0000) == 0x42);
+    assert(bus_read(&bus, 0x0800) == 0x42);
+    assert(bus_read(&bus, 0x1000) == 0x42);
+    assert(bus_read(&bus, 0x1800) == 0x42);
 
-  /* Read from memory */
-  uint8_t value = READ(0x00FD);
-  assert(value == 0x4D);
+    bus_write(&bus, 0x07FF, 0xAB);
+    assert(bus_read(&bus, 0x07FF) == 0xAB);
+    assert(bus_read(&bus, 0x0FFF) == 0xAB);
+    assert(bus_read(&bus, 0x17FF) == 0xAB);
+    assert(bus_read(&bus, 0x1FFF) == 0xAB);
 
-  /* Get 16-bit address from memory given address */
-  uint16_t addr_16 = ADDR_16(0x00FD);
-  assert(addr_16 == 0xE34D);
+    bus_write(&bus, 0x1234, 0xCD);
+    assert(bus_read(&bus, 0x0234) == 0xCD);
 
-  /* Write to memory */
-  write(0x003D, 0x4C);
-  value = READ(0x003D);
-  assert(value == 0x4C);
-
-  /* Relative Addressing */
-  address = RELATIVE(address, 0xA7);
-  assert(address == 0x7FD9);
-
-  /* Tear down */
-  deinitialize_cpu();
+    printf("test_ram_mirroring: PASS\n");
 }
 
-void test_stack()
-{
-  /* Set up */
-  initialize_cpu();
+static void test_cartridge_load(void) {
+    Cartridge cart;
+    memset(&cart, 0, sizeof(cart));
 
-  /* Test */
+    bool loaded = cartridge_load(&cart, "roms/test/nestest.nes");
+    if (!loaded) {
+        printf("test_cartridge_load: SKIP (nestest.nes not found, run 'make fetch-nestest')\n");
+        return;
+    }
 
-  /* Push byte to stack */
-  push_stack8(0x10);
-  assert(sp == 0x0101);
-  assert(memory[0x0100] == 0x10);
+    assert(cart.prg_rom_size == 16384);
+    assert(cart.mapper_id == 0);
+    assert(cart.mapper != NULL);
 
-  /* Push word to stack */
-  push_stack16(0xFFED);
-  assert(sp == 0x0103);
-  assert(READ(0x0101) == 0xED);
-  assert(READ(0x0102) == 0xFF);
+    uint8_t first_byte = cartridge_cpu_read(&cart, 0xC000);
+    assert(first_byte == 0x4C);
 
-  /* Pop word from stack */
-  uint16_t value16 = pop_stack16();
-  assert(sp == 0x0101);
-  assert(value16 == 0xFFED);
-
-  /* Pop byte from stack */
-  uint8_t value8 = pop_stack8();
-  assert(sp == 0x0100);
-  assert(value8 == 0x10);
-
-  /* Tear down */
-  deinitialize_cpu();
+    cartridge_free(&cart);
+    printf("test_cartridge_load: PASS\n");
 }
 
-void test_bitman()
-{
-  /* Set up */
-  initialize_cpu();
-  uint8_t value8;
-  uint16_t value16;
-  processor_status = 0x80;
+static void test_stack_operations(void) {
+    Bus bus;
+    CPU cpu;
+    bus_init(&bus);
+    cpu_init(&cpu, &bus);
 
-  /* Test */
+    assert(cpu.S == 0xFD);
 
-  /* Get most significant bit */
-  value8 = highbit(0xF0);
-  assert(value8 == 0x01);
+    cpu_push8(&cpu, 0x42);
+    assert(cpu.S == 0xFC);
+    assert(bus_read(&bus, 0x01FD) == 0x42);
 
-  /* Get bit */
-  value8 = getflag(n);
-  assert(value8 == 0x01);
+    cpu_push8(&cpu, 0xAB);
+    assert(cpu.S == 0xFB);
+    assert(bus_read(&bus, 0x01FC) == 0xAB);
 
-  /* Set bit */
-  processor_status = 0;
-  setflag(n, 1);
-  value8 = getflag(n);
-  assert(value8 == 0x01);
-  setflag(n, 0);
-  value8 = getflag(n);
-  assert(value8 == 0);
+    uint8_t val = cpu_pop8(&cpu);
+    assert(val == 0xAB);
+    assert(cpu.S == 0xFC);
 
-  /* Tear down */
-  deinitialize_cpu();
+    val = cpu_pop8(&cpu);
+    assert(val == 0x42);
+    assert(cpu.S == 0xFD);
+
+    cpu.S = 0xFD;
+    cpu_push16(&cpu, 0xBEEF);
+    assert(cpu.S == 0xFB);
+    assert(bus_read(&bus, 0x01FD) == 0xBE);
+    assert(bus_read(&bus, 0x01FC) == 0xEF);
+
+    uint16_t val16 = cpu_pop16(&cpu);
+    assert(val16 == 0xBEEF);
+    assert(cpu.S == 0xFD);
+
+    printf("test_stack_operations: PASS\n");
 }
 
-void test_opcodes()
-{
-  /* Set up */
-  initialize_cpu();
-  write(0x1000, 0x04);
+static void test_flag_operations(void) {
+    Bus bus;
+    CPU cpu;
+    bus_init(&bus);
+    cpu_init(&cpu, &bus);
 
-  /* Test */
+    cpu.P = 0;
+    cpu_set_flag(&cpu, FLAG_C, true);
+    assert(cpu.P == FLAG_C);
+    assert(cpu_get_flag(&cpu, FLAG_C) == true);
 
-  /* Add with carry */
-  ADC(0x4D);
-  assert(accumulator == 0x4D);
+    cpu_set_flag(&cpu, FLAG_Z, true);
+    assert(cpu.P == (FLAG_C | FLAG_Z));
 
-  /* And accumulator */
-  AND(0x3D);
-  assert(accumulator == 0x0D);
+    cpu_set_flag(&cpu, FLAG_C, false);
+    assert(cpu.P == FLAG_Z);
+    assert(cpu_get_flag(&cpu, FLAG_C) == false);
 
-  /* Arithmetic shift left */
-  ASL(READ(0x1000), 0x1000, 1);
-  assert(READ(0x1000) == 0x08);
+    cpu.P = 0;
+    cpu_set_flag(&cpu, FLAG_N, true);
+    cpu_set_flag(&cpu, FLAG_V, true);
+    assert(cpu.P == (FLAG_N | FLAG_V));
 
-  /* Tear down */
-  deinitialize_cpu();
+    printf("test_flag_operations: PASS\n");
+}
+
+static void test_read16_variants(void) {
+    Bus bus;
+    bus_init(&bus);
+
+    bus_write(&bus, 0x0010, 0x34);
+    bus_write(&bus, 0x0011, 0x12);
+    assert(cpu_read16(&bus, 0x0010) == 0x1234);
+
+    bus_write(&bus, 0x00FF, 0xCD);
+    bus_write(&bus, 0x0000, 0xAB);
+    assert(cpu_read16_zp(&bus, 0xFF) == 0xABCD);
+
+    bus_write(&bus, 0x02FF, 0xEF);
+    bus_write(&bus, 0x0200, 0xBE);
+    assert(cpu_read16_jmp_bug(&bus, 0x02FF) == 0xBEEF);
+
+    printf("test_read16_variants: PASS\n");
+}
+
+int main(void) {
+    test_cpu_init();
+    test_ram_mirroring();
+    test_cartridge_load();
+    test_stack_operations();
+    test_flag_operations();
+    test_read16_variants();
+
+    printf("\nAll tests passed.\n");
+    return 0;
 }
