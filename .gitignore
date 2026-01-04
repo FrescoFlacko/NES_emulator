@@ -1,0 +1,20 @@
+# Build artifacts
+build/
+*.o
+*.out
+src/**/*.o
+test/test
+test/nestest_runner
+
+# ROMs (downloaded, not committed)
+roms/test/*.nes
+
+# Editor/OS
+.DS_Store
+*.swp
+*~
+.vscode/
+.idea/
+
+# Logs
+nestest_out.log
