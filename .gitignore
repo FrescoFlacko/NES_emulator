@@ -15,6 +15,11 @@ roms/test/*.nes
 *~
 .vscode/
 .idea/
+testdata/
 
 # Logs
 nestest_out.log
+
+smb.nes
+smb2.nes
+smb3.nes

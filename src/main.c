@@ -201,6 +201,25 @@ static void handle_key(NES* nes, SDL_Keycode key, bool pressed) {
             }
             return;
             
+        case SDLK_s:
+            if (pressed) {
+                char filename[64];
+                snprintf(filename, sizeof(filename), "screenshot_%06llu.bmp", (unsigned long long)nes->frame_count);
+                SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormatFrom(
+                    nes->ppu.framebuffer,
+                    256, 240, 32, 256 * 4,
+                    SDL_PIXELFORMAT_ARGB8888
+                );
+                if (surface) {
+                    SDL_SaveBMP(surface, filename);
+                    SDL_FreeSurface(surface);
+                    printf("Saved screenshot: %s\n", filename);
+                } else {
+                    fprintf(stderr, "Failed to create screenshot surface: %s\n", SDL_GetError());
+                }
+            }
+            return;
+
         default:
             return;
     }
@@ -303,7 +322,7 @@ static void run_frame(NES* nes) {
             Mapper* mapper = nes->bus.cart->mapper;
             if (mapper->irq_pending && mapper->irq_pending(mapper)) {
                 cpu_irq(&nes->cpu);
-                if (mapper->irq_clear) mapper->irq_clear(mapper);
+                // if (mapper->irq_clear) mapper->irq_clear(mapper);
             }
         }
     }

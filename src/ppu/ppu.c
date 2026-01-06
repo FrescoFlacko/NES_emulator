@@ -3,7 +3,7 @@
  * Responsibility: PPU rendering pipeline and register handling.
  * Key invariants:
  *  - Background fetches every 8 dots (NT → AT → pattern lo → pattern hi)
- *  - Sprite evaluation at dot 257, sprite fetches at dot 321
+ *  - Sprite evaluation at dot 257, sprite fetches distributed over 257-320
  *  - v/t scroll registers updated: inc_x at end of tile, inc_y at dot 256, copy_x at 257
  * Notes:
  *  - nes_palette[] is ARGB8888 for direct framebuffer use
@@ -275,14 +275,25 @@ static void ppu_fetch_at_byte(PPU* ppu) {
 }
 
 static void ppu_fetch_bg_lo(PPU* ppu) {
-    uint16_t pattern_addr = ((ppu->ctrl & PPU_CTRL_BG_PATTERN) ? 0x1000 : 0) +
-                           (ppu->nt_byte << 4) + ((ppu->v >> 12) & 0x07);
+    /* 
+     * Force dynamic address calculation for every fetch to support mid-scanline 
+     * bank switching (e.g., MMC3 IRQ effects in SMB3).
+     * Do NOT cache the pattern table base address.
+     */
+    uint16_t bg_pattern_base = (ppu->ctrl & PPU_CTRL_BG_PATTERN) ? 0x1000 : 0x0000;
+    uint16_t tile_offset = (ppu->nt_byte << 4) + ((ppu->v >> 12) & 0x07);
+    uint16_t pattern_addr = bg_pattern_base + tile_offset;
+    
     ppu->bg_lo = ppu_read(ppu, pattern_addr);
 }
 
+
+
 static void ppu_fetch_bg_hi(PPU* ppu) {
-    uint16_t pattern_addr = ((ppu->ctrl & PPU_CTRL_BG_PATTERN) ? 0x1000 : 0) +
-                           (ppu->nt_byte << 4) + ((ppu->v >> 12) & 0x07) + 8;
+    uint16_t bg_pattern_base = (ppu->ctrl & PPU_CTRL_BG_PATTERN) ? 0x1000 : 0x0000;
+    uint16_t tile_offset = (ppu->nt_byte << 4) + ((ppu->v >> 12) & 0x07);
+    uint16_t pattern_addr = bg_pattern_base + tile_offset + 8;
+    
     ppu->bg_hi = ppu_read(ppu, pattern_addr);
 }
 
@@ -308,70 +319,67 @@ static void ppu_evaluate_sprites(PPU* ppu) {
     }
 }
 
-static void ppu_fetch_sprites(PPU* ppu) {
+static void ppu_fetch_sprite_info(PPU* ppu, int slot_index) {
     int sprite_height = (ppu->ctrl & PPU_CTRL_SPRITE_SIZE) ? 16 : 8;
     
-    // Always perform 8 fetches (garbage fetches if no sprites)
-    for (int i = 0; i < 8; i++) {
-        uint8_t y, tile, attr, x;
-        bool valid_sprite = (i < ppu->sprite_count);
+    uint8_t y, tile, attr, x;
+    bool valid_sprite = (slot_index < ppu->sprite_count);
+    
+    if (valid_sprite) {
+        y = ppu->secondary_oam[slot_index * 4 + 0];
+        tile = ppu->secondary_oam[slot_index * 4 + 1];
+        attr = ppu->secondary_oam[slot_index * 4 + 2];
+        x = ppu->secondary_oam[slot_index * 4 + 3];
         
-        if (valid_sprite) {
-            y = ppu->secondary_oam[i * 4 + 0];
-            tile = ppu->secondary_oam[i * 4 + 1];
-            attr = ppu->secondary_oam[i * 4 + 2];
-            x = ppu->secondary_oam[i * 4 + 3];
-            
-            ppu->sprite_attributes[i] = attr;
-            ppu->sprite_positions[i] = x;
-        } else {
-            tile = 0xFF;
-            attr = 0xFF;
+        ppu->sprite_attributes[slot_index] = attr;
+        ppu->sprite_positions[slot_index] = x;
+    } else {
+        tile = 0xFF;
+        attr = 0xFF;
+    }
+    
+    uint16_t pattern_addr;
+    if (valid_sprite) {
+        int row = ppu->scanline - y;
+        if (attr & 0x80) {
+            row = sprite_height - 1 - row;
         }
         
-        uint16_t pattern_addr;
-        if (valid_sprite) {
-            int row = ppu->scanline - y;
-            if (attr & 0x80) {
-                row = sprite_height - 1 - row;
+        if (sprite_height == 16) {
+            uint16_t table = (tile & 0x01) ? 0x1000 : 0x0000;
+            tile &= 0xFE;
+            if (row >= 8) {
+                tile++;
+                row -= 8;
             }
-            
-            if (sprite_height == 16) {
-                uint16_t table = (tile & 0x01) ? 0x1000 : 0x0000;
-                tile &= 0xFE;
-                if (row >= 8) {
-                    tile++;
-                    row -= 8;
-                }
-                pattern_addr = table + (tile << 4) + row;
-            } else {
-                uint16_t table = (ppu->ctrl & PPU_CTRL_SPRITE_PATTERN) ? 0x1000 : 0x0000;
-                pattern_addr = table + (tile << 4) + row;
-            }
+            pattern_addr = table + (tile << 4) + row;
         } else {
             uint16_t table = (ppu->ctrl & PPU_CTRL_SPRITE_PATTERN) ? 0x1000 : 0x0000;
-            if (sprite_height == 16) {
-                table = 0x1000;
-            }
-            pattern_addr = table + (0xFF << 4);
+            pattern_addr = table + (tile << 4) + row;
+        }
+    } else {
+        uint16_t table = (ppu->ctrl & PPU_CTRL_SPRITE_PATTERN) ? 0x1000 : 0x0000;
+        if (sprite_height == 16) {
+            table = 0x1000;
+        }
+        pattern_addr = table + (0xFF << 4);
+    }
+    
+    uint8_t lo = ppu_read(ppu, pattern_addr);
+    uint8_t hi = ppu_read(ppu, pattern_addr + 8);
+    
+    if (valid_sprite) {
+        if (attr & 0x40) {
+            lo = ((lo & 0x55) << 1) | ((lo & 0xAA) >> 1);
+            lo = ((lo & 0x33) << 2) | ((lo & 0xCC) >> 2);
+            lo = ((lo & 0x0F) << 4) | ((lo & 0xF0) >> 4);
+            hi = ((hi & 0x55) << 1) | ((hi & 0xAA) >> 1);
+            hi = ((hi & 0x33) << 2) | ((hi & 0xCC) >> 2);
+            hi = ((hi & 0x0F) << 4) | ((hi & 0xF0) >> 4);
         }
         
-        uint8_t lo = ppu_read(ppu, pattern_addr);
-        uint8_t hi = ppu_read(ppu, pattern_addr + 8);
-        
-        if (valid_sprite) {
-            if (attr & 0x40) {
-                lo = ((lo & 0x55) << 1) | ((lo & 0xAA) >> 1);
-                lo = ((lo & 0x33) << 2) | ((lo & 0xCC) >> 2);
-                lo = ((lo & 0x0F) << 4) | ((lo & 0xF0) >> 4);
-                hi = ((hi & 0x55) << 1) | ((hi & 0xAA) >> 1);
-                hi = ((hi & 0x33) << 2) | ((hi & 0xCC) >> 2);
-                hi = ((hi & 0x0F) << 4) | ((hi & 0xF0) >> 4);
-            }
-            
-            ppu->sprite_patterns_lo[i] = lo;
-            ppu->sprite_patterns_hi[i] = hi;
-        }
+        ppu->sprite_patterns_lo[slot_index] = lo;
+        ppu->sprite_patterns_hi[slot_index] = hi;
     }
 }
 
@@ -517,8 +525,17 @@ void ppu_tick(PPU* ppu) {
             if (ppu->dot == 257) {
                 ppu_evaluate_sprites(ppu);
             }
-            if (ppu->dot == 321) {
-                ppu_fetch_sprites(ppu);
+            
+            /*
+             * Distribute sprite fetches across dots 257-320 (64 dots).
+             * 8 sprites * 8 dots per sprite.
+             * We initiate the fetch at the start of each 8-dot window (257, 265, ...).
+             */
+            if (ppu->dot >= 257 && ppu->dot <= 320) {
+                if ((ppu->dot - 257) % 8 == 0) {
+                    int slot = (ppu->dot - 257) / 8;
+                    ppu_fetch_sprite_info(ppu, slot);
+                }
             }
         }
     }

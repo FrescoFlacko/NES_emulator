@@ -120,9 +120,6 @@ void bus_tick(Bus* bus, int cpu_cycles) {
             if (bus->cpu) {
                 cpu_irq(bus->cpu);
             }
-            if (mapper->irq_clear) {
-                mapper->irq_clear(mapper);
-            }
         }
     }
 }

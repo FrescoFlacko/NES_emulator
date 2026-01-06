@@ -10,6 +10,25 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * MMC3 A12 Filter Configuration
+ * -----------------------------
+ * The MMC3 IRQ counter is clocked by A12 rising edges (0->1).
+ * To filter out noise (short toggles during sprite fetches), the hardware
+ * requires A12 to remain LOW for a minimum duration (M2 cycles) before
+ * a new rising edge triggers the counter.
+ *
+ * Standard value: 12 cycles.
+ * 
+ * Reason: Sprite fetches occur every 8 dots (257, 265, ..., 321).
+ * If A12 is HIGH during sprite fetches (Sprites at $1000), we see
+ * rising edges every 8 dots. We MUST ignore these 8-cycle gaps.
+ * A filter > 8 is required. 12 is the standard hardware value.
+ * This ensures we only clock once per scanline (at the first fetch),
+ * and reset the filter only during the long HBlank/Draw period.
+ */
+#define MMC3_A12_FILTER_DELAY 12
+
 Mapper* mapper_create(Cartridge* cart, uint8_t mapper_id) {
     switch (mapper_id) {
         case 0: return mapper000_create(cart);
@@ -91,7 +110,7 @@ typedef struct {
     uint8_t prg_ram_protect;
     bool prev_a12_high;
     uint32_t last_a12_rise_cycle;
-    uint32_t last_a12_low_cycle;
+    uint32_t last_a12_high_cycle; /* Tracks the last time A12 was HIGH */
 } MMC3State;
 
 static uint8_t mmc3_cpu_read(Mapper* m, uint16_t addr) {
@@ -222,7 +241,7 @@ static uint8_t mmc3_ppu_read(Mapper* m, uint16_t addr) {
         if (cart->chr_rom) {
             return cart->chr_rom[offset];
         } else if (cart->chr_ram) {
-            return cart->chr_ram[addr & 0x1FFF];
+            return cart->chr_ram[offset];
         }
     }
     
@@ -231,9 +250,50 @@ static uint8_t mmc3_ppu_read(Mapper* m, uint16_t addr) {
 
 static void mmc3_ppu_write(Mapper* m, uint16_t addr, uint8_t val) {
     Cartridge* cart = m->cart;
+    MMC3State* s = (MMC3State*)m->state;
     
     if (addr < 0x2000 && cart->chr_ram) {
-        cart->chr_ram[addr] = val;
+        uint32_t bank;
+        uint32_t chr_banks = cart->chr_rom_size / 1024;
+        if (chr_banks == 0) chr_banks = 8;
+        
+        if (s->chr_mode == 0) {
+            if (addr < 0x0800) {
+                bank = s->bank_data[0] & 0xFE;
+                bank += (addr >> 10) & 1;
+            } else if (addr < 0x1000) {
+                bank = s->bank_data[1] & 0xFE;
+                bank += ((addr - 0x0800) >> 10) & 1;
+            } else if (addr < 0x1400) {
+                bank = s->bank_data[2];
+            } else if (addr < 0x1800) {
+                bank = s->bank_data[3];
+            } else if (addr < 0x1C00) {
+                bank = s->bank_data[4];
+            } else {
+                bank = s->bank_data[5];
+            }
+        } else {
+            if (addr < 0x0400) {
+                bank = s->bank_data[2];
+            } else if (addr < 0x0800) {
+                bank = s->bank_data[3];
+            } else if (addr < 0x0C00) {
+                bank = s->bank_data[4];
+            } else if (addr < 0x1000) {
+                bank = s->bank_data[5];
+            } else if (addr < 0x1800) {
+                bank = s->bank_data[0] & 0xFE;
+                bank += ((addr - 0x1000) >> 10) & 1;
+            } else {
+                bank = s->bank_data[1] & 0xFE;
+                bank += ((addr - 0x1800) >> 10) & 1;
+            }
+        }
+        
+        bank %= chr_banks;
+        uint32_t offset = (bank * 1024) + (addr & 0x03FF);
+        cart->chr_ram[offset] = val;
     }
 }
 
@@ -256,18 +316,16 @@ static void mmc3_a12_latch(Mapper* m, uint16_t addr, uint32_t cycle) {
     MMC3State* s = (MMC3State*)m->state;
     bool a12_high = (addr & 0x1000) != 0;
 
-    if (!a12_high) {
-        s->last_a12_low_cycle = cycle;
-        s->prev_a12_high = false;
-        return;
-    }
-
-    if (!s->prev_a12_high) {
-        if (cycle - s->last_a12_low_cycle >= 16) {
-            mmc3_scanline(m);
+    if (a12_high) {
+        if (!s->prev_a12_high) {
+            if (cycle - s->last_a12_high_cycle > MMC3_A12_FILTER_DELAY) {
+                mmc3_scanline(m);
+            }
         }
-        s->last_a12_rise_cycle = cycle;
+        s->last_a12_high_cycle = cycle;
         s->prev_a12_high = true;
+    } else {
+        s->prev_a12_high = false;
     }
 }
 
@@ -312,7 +370,6 @@ Mapper* mapper004_create(Cartridge* cart) {
     m->ppu_write = mmc3_ppu_write;
     m->a12_latch = mmc3_a12_latch;
     m->irq_pending = mmc3_irq_pending;
-
     m->irq_clear = mmc3_irq_clear;
     m->reset = mmc3_reset;
     
