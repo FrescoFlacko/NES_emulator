@@ -1,0 +1,10 @@
+Loaded ROM: testdata/nes-test-roms-master/mmc3_irq_tests/4.Scanline_timing.nes
+  PRG ROM: 16 KB
+  CHR ROM: 0 KB
+  Mapper: 4
+  Mirroring: Horizontal
+
+Starting emulation...
+Press Escape to quit, R to reset, D to toggle debug
+
+Goodbye!
