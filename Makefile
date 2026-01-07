@@ -2,9 +2,9 @@ CC = gcc
 CFLAGS = -Wall -Wextra -Wpedantic -std=c11 -g
 BUILD_DIR = build
 
-SOURCES = src/cpu/cpu.c src/bus/bus.c src/cartridge/cartridge.c src/mapper/mapper.c src/ppu/ppu.c src/apu/apu.c
+SOURCES = src/cpu/cpu.c src/bus/bus.c src/cartridge/cartridge.c src/mapper/mapper.c src/ppu/ppu.c src/apu/apu.c src/savestate/savestate.c
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
-TEST_OBJECTS = $(BUILD_DIR)/src/cpu/cpu_test.o $(BUILD_DIR)/src/bus/bus.o $(BUILD_DIR)/src/cartridge/cartridge.o $(BUILD_DIR)/src/mapper/mapper.o $(BUILD_DIR)/src/ppu/ppu.o $(BUILD_DIR)/src/apu/apu.o
+TEST_OBJECTS = $(BUILD_DIR)/src/cpu/cpu_test.o $(BUILD_DIR)/src/bus/bus.o $(BUILD_DIR)/src/cartridge/cartridge.o $(BUILD_DIR)/src/mapper/mapper.o $(BUILD_DIR)/src/ppu/ppu.o $(BUILD_DIR)/src/apu/apu.o $(BUILD_DIR)/src/savestate/savestate.o
 
 TEST_BINARIES = $(BUILD_DIR)/test_cpu $(BUILD_DIR)/test_bus $(BUILD_DIR)/test_cartridge $(BUILD_DIR)/test_mapper $(BUILD_DIR)/test_ppu $(BUILD_DIR)/test_apu
 
