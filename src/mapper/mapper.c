@@ -91,6 +91,8 @@ Mapper* mapper000_create(Cartridge* cart) {
     m->cpu_write = nrom_cpu_write;
     m->ppu_read = nrom_ppu_read;
     m->ppu_write = nrom_ppu_write;
+    m->save_state = NULL;
+    m->load_state = NULL;
     m->state = NULL;
 
     return m;
@@ -352,6 +354,16 @@ static void mmc3_reset(Mapper* m) {
     s->bank_data[7] = 1;
 }
 
+static bool mmc3_save_state(Mapper* m, FILE* f) {
+    MMC3State* s = (MMC3State*)m->state;
+    return fwrite(s, sizeof(MMC3State), 1, f) == 1;
+}
+
+static bool mmc3_load_state(Mapper* m, FILE* f) {
+    MMC3State* s = (MMC3State*)m->state;
+    return fread(s, sizeof(MMC3State), 1, f) == 1;
+}
+
 Mapper* mapper004_create(Cartridge* cart) {
     Mapper* m = calloc(1, sizeof(Mapper));
     if (!m) return NULL;
@@ -372,6 +384,8 @@ Mapper* mapper004_create(Cartridge* cart) {
     m->irq_pending = mmc3_irq_pending;
     m->irq_clear = mmc3_irq_clear;
     m->reset = mmc3_reset;
+    m->save_state = mmc3_save_state;
+    m->load_state = mmc3_load_state;
     
     mmc3_reset(m);
     

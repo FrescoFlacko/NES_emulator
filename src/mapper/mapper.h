@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 typedef struct Cartridge Cartridge;
 
@@ -29,6 +30,9 @@ typedef struct Mapper {
     void    (*a12_latch)(struct Mapper* m, uint16_t addr, uint32_t cycle);
     bool    (*irq_pending)(struct Mapper* m);
     void    (*irq_clear)(struct Mapper* m);
+
+    bool    (*save_state)(struct Mapper* m, FILE* f);
+    bool    (*load_state)(struct Mapper* m, FILE* f);
 
     void* state;
 } Mapper;

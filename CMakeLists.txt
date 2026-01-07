@@ -32,6 +32,10 @@ set(APU_SOURCES
     src/apu/apu.c
 )
 
+set(SAVESTATE_SOURCES
+    src/savestate/savestate.c
+)
+
 add_library(nes_core STATIC
     ${CPU_SOURCES}
     ${BUS_SOURCES}
@@ -39,6 +43,7 @@ add_library(nes_core STATIC
     ${MAPPER_SOURCES}
     ${PPU_SOURCES}
     ${APU_SOURCES}
+    ${SAVESTATE_SOURCES}
 )
 target_include_directories(nes_core PUBLIC src)
 
